@@ -1,0 +1,107 @@
+services:
+  # Main Next.js Application
+  - type: web
+    name: newsletterfy
+    runtime: node
+    plan: starter  # Can upgrade to standard or pro as needed
+    region: oregon  # Change to your preferred region
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true
+    
+    # Environment Variables
+    envVars:
+      # Node.js Configuration
+      - key: NODE_ENV
+        value: production
+      
+      # Supabase Configuration (Set these in Render Dashboard)
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false  # Set manually in dashboard
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false  # Set manually in dashboard
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false  # Set manually in dashboard
+      
+      # Application URLs
+      - key: NEXT_PUBLIC_APP_URL
+        fromService:
+          type: web
+          name: newsletterfy
+          property: host
+      - key: NEXTAUTH_URL
+        fromService:
+          type: web
+          name: newsletterfy
+          property: host
+      
+      # Polar.sh Payment Configuration (Set these in Render Dashboard)
+      - key: POLAR_ACCESS_TOKEN
+        sync: false  # Set manually: polar_oat_zKreRyaoWV91hklgpWvIZIgtfzt4UJHFBwQOI3CghgL
+      - key: POLAR_ORGANIZATION_ID
+        sync: false  # Set manually: d96c53d9-d12a-4533-8bb1-062ddad9f7cd
+      - key: POLAR_WEBHOOK_SECRET
+        sync: false  # Set manually in dashboard
+      
+      # TinyMCE Configuration (Set in Render Dashboard)
+      - key: NEXT_PUBLIC_TINYMCE_API_KEY
+        sync: false  # Set manually in dashboard
+      
+      # Email Configuration (Optional - Set in Render Dashboard)
+      - key: SENDGRID_API_KEY
+        sync: false  # Set manually in dashboard
+      - key: FROM_EMAIL
+        value: noreply@newsletterfy.com
+      
+      # Legacy Payment Providers (Optional - Set in Render Dashboard if needed)
+      - key: STRIPE_SECRET_KEY
+        sync: false  # Set manually in dashboard
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false  # Set manually in dashboard
+      - key: PAYSTACK_SECRET_KEY
+        sync: false  # Set manually in dashboard
+      - key: INTASEND_PUBLISHABLE_KEY
+        sync: false  # Set manually in dashboard
+      - key: INTASEND_SECRET_KEY
+        sync: false  # Set manually in dashboard
+
+  # Backend API (if you want to deploy backend separately)
+  - type: web
+    name: newsletterfy-backend
+    runtime: node
+    plan: starter
+    region: oregon
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    
+    # Backend Environment Variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
+      
+      # Database Configuration
+      - key: SUPABASE_URL
+        sync: false  # Set manually in dashboard
+      - key: SUPABASE_ANON_KEY
+        sync: false  # Set manually in dashboard
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false  # Set manually in dashboard
+
+# Database (Using external Supabase - no database service needed)
+# Your Supabase database is already configured with all necessary tables
+
+# Cron Jobs (Optional - for scheduled tasks)
+# - type: cron
+#   name: newsletter-cleanup
+#   schedule: "0 2 * * *"  # Daily at 2 AM
+#   buildCommand: npm install
+#   startCommand: npm run cleanup
+#   envVars:
+#     - key: NODE_ENV
+#       value: production

@@ -1,0 +1,34 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--access-token",
+        "sbp_282149840782f1d6ef77e08f28995fe40a329d67",
+        "--project-ref",
+        "kgpidjdgayaklvgyzzao"
+      ]
+    },
+    "browsermcp": {
+      "command": "npx",
+      "args": [
+        "@browsermcp/mcp@latest"
+      ]
+    },
+    "polar": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "--package",
+        "@polar-sh/sdk",
+        "--",
+        "mcp",
+        "start",
+        "--access-token",
+        "polar_oat_zKreRyaoWV91hklgpWvIZIgtfzt4UJHFBwQOI3CghgL"
+      ]
+    }
+  }
+}

@@ -1,0 +1,1 @@
+# Supabase Authentication Setup Guide
