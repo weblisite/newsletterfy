@@ -42,21 +42,35 @@ For production, replace `test` keys with `live` keys and set `NODE_ENV=productio
 
 ## Environment Variables
 
-Create a `.env.local` file with the following variables:
+Create a `.env.local` file with the following essential variables:
 
 ```env
-# Supabase Configuration
+# Supabase Configuration (Database & Storage)
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
-# IntaSend Payment Processing
-INTASEND_PUBLISHABLE_KEY=ISPubKey_test_your_key_here
-INTASEND_SECRET_KEY=ISSecretKey_test_your_secret_here
+# Polar.sh Payment Processing
+POLAR_ACCESS_TOKEN=polar_at_your_access_token_here
+POLAR_ORGANIZATION_ID=your_polar_organization_id
+POLAR_WEBHOOK_SECRET=your_polar_webhook_secret
+
+# Better-Auth Configuration
+BETTER_AUTH_SECRET=your_random_secret_key
+BETTER_AUTH_URL=http://localhost:3000
+
+# Email Configuration (Choose one)
+SENDGRID_API_KEY=SG.your_sendgrid_api_key_here
+# OR
+ELASTIC_EMAIL_API_KEY=your_elastic_email_api_key_here
+EMAIL_PROVIDER=sendgrid
 
 # App Configuration
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+NODE_ENV=development
 ```
+
+**Note:** The `.env.local` file is gitignored for security. Never commit real API keys to version control.
 
 ## Getting Started
 
