@@ -1,17 +1,24 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
-import IntaSend from 'intasend-node';
+// LEGACY ROUTE - DISABLED
+// This route has been replaced by Polar.sh checkout
+// All digital product purchases now go through: /api/monetization/digital-products/polar-purchase
 
-// Initialize IntaSend with environment variables
-const intasend = new IntaSend(
-  process.env.INTASEND_PUBLISHABLE_KEY || 'ISPubKey_live_8e8857a5-54ad-4d06-8537-4557857db13b',
-  process.env.INTASEND_SECRET_KEY || 'ISSecretKey_live_ce648358-1847-471d-bf9f-24cf3f887c59',
-  process.env.NODE_ENV === 'production' ? false : true // true for test environment
-);
+import { NextResponse } from 'next/server';
 
 // POST /api/monetization/digital-products/[id]/purchase
-export async function POST(req, { params }) {
+export async function POST(request, { params }) {
+  // This endpoint is deprecated - Use /api/monetization/digital-products/polar-purchase instead
+  console.log('Legacy digital product purchase accessed - redirecting to Polar');
+
+  return NextResponse.json({
+    success: false,
+    error: 'IntaSend digital product purchases are no longer supported.',
+    message: 'Please use Polar checkout for all digital product purchases.',
+    redirect_endpoint: '/api/monetization/digital-products/polar-purchase'
+  }, { status: 410 });
+}
+
+/* LEGACY CODE DISABLED - Use /api/monetization/digital-products/polar-purchase instead
+export async function POST_DISABLED(req, { params }) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();
@@ -220,3 +227,4 @@ export async function GET(req, { params }) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+*/

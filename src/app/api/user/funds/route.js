@@ -113,73 +113,16 @@ export async function POST(req) {
       );
     }
 
-    // If this is a wallet top-up (deposit), process with IntaSend
+    // If this is a wallet top-up (deposit), redirect to new Polar-based system
     if (type === 'deposit') {
-      try {
-        // Prepare payment data for IntaSend
-        const paymentData = {
-          amount: amount,
-          currency: 'USD',
-          email: customer_email || user.email,
-          redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/user-dashboard/funds?status=success`,
-          api_ref: `user_funds_${user.id}_${Date.now()}`
-        };
-
-        let paymentResponse;
-
-        if (payment_method === 'mpesa' && phone_number) {
-          // Process M-Pesa payment
-          paymentResponse = await intasend.mpesa().stkPush({
-            phone_number: phone_number,
-            amount: amount,
-            currency: 'KES', // M-Pesa only supports KES
-            api_ref: paymentData.api_ref
-          });
-        } else {
-          // Process card/bank payment via checkout
-          paymentResponse = await intasend.collection().charge(paymentData);
-        }
-
-        // Create pending transaction record
-        const { data: transaction, error: transactionError } = await supabase
-          .from('payment_transactions')
-          .insert([{
-            user_id: user.id,
-            type: 'deposit',
-            amount: parseFloat(amount),
-            description: description || 'Wallet top-up',
-            reference_id: reference_id || paymentResponse.id || paymentResponse.checkout_id,
-            reference_type: reference_type || 'wallet_topup',
-            status: 'pending',
-            payment_method,
-            payment_provider: 'intasend',
-            intasend_payment_id: paymentResponse.id || paymentResponse.checkout_id,
-            payment_reference: paymentData.api_ref
-          }])
-          .select()
-          .single();
-
-        if (transactionError) throw transactionError;
-
-        // Return appropriate response based on payment method
-        if (payment_method === 'mpesa') {
-          return NextResponse.json({
-            success: true,
-            payment_method: 'mpesa',
-            message: 'M-Pesa payment initiated. Check your phone for STK push prompt.',
-            checkout_id: paymentResponse.checkout_id || paymentResponse.id,
-            transaction
-          });
-        } else {
-          return NextResponse.json({
-            success: true,
-            payment_method: 'checkout',
-            checkout_url: paymentResponse.url,
-            checkout_id: paymentResponse.checkout_id || paymentResponse.id,
-            message: 'Payment checkout created successfully',
-            transaction
-          });
-        }
+      console.log('Legacy wallet deposit accessed - redirecting to Polar');
+      
+      return NextResponse.json({
+        success: false,
+        error: 'IntaSend wallet deposits are no longer supported.',
+        message: 'Please use the new Polar-based wallet deposit system.',
+        redirect_endpoint: '/api/user/funds/polar-deposit'
+      }, { status: 410 });
 
       } catch (intasendError) {
         console.error('IntaSend payment error:', intasendError);

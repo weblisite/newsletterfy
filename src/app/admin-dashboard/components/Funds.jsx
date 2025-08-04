@@ -33,7 +33,7 @@ export default function Funds() {
       amount: 250,
       status: "approved",
       date: "2024-01-13",
-      paymentMethod: "intasend",
+      paymentMethod: "polar",
       accountDetails: "acct_*****",
       type: "withdrawal",
       description: "Revenue withdrawal request",

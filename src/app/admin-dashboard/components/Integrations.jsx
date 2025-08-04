@@ -25,13 +25,13 @@ export default function Integrations() {
     ],
     payment: [
       {
-        id: "intasend",
-        name: "IntaSend",
-        description: "Payment processing with M-Pesa, Cards & Bank transfers",
+        id: "polar",
+        name: "Polar.sh",
+        description: "Modern payment processing with subscriptions & one-time payments",
         connected: true,
         icon: "credit-card",
         status: "active",
-        lastSync: "2024-01-15 15:45",
+        lastSync: new Date().toISOString().split('T')[0] + " " + new Date().toTimeString().split(' ')[0],
       },
       {
         id: "paystack",

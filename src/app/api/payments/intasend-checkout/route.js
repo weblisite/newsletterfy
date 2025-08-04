@@ -11,6 +11,19 @@ const intasend = new IntaSend(
 );
 
 export async function POST(request) {
+  // This endpoint is deprecated - Use /api/payments/polar-checkout instead
+  console.log('Legacy IntaSend checkout accessed - redirecting to Polar');
+  
+  return NextResponse.json({
+    success: false,
+    error: 'IntaSend payments are no longer supported.',
+    message: 'Please use Polar checkout for all payments.',
+    redirect_endpoint: '/api/payments/polar-checkout'
+  }, { status: 410 });
+}
+
+/* LEGACY CODE DISABLED - Use /api/payments/polar-checkout instead
+export async function POST_DISABLED(request) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session } } = await supabase.auth.getSession();

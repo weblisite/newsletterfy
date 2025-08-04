@@ -10,6 +10,7 @@ import Integrations from "./components/Integrations";
 import Settings from "./components/Settings";
 import PayoutManagement from '@/components/admin/PayoutManagement';
 import PayoutAnalytics from '@/components/admin/PayoutAnalytics';
+import EmailProviderSettings from './components/EmailProviderSettings';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("payouts");
@@ -24,6 +25,7 @@ export default function AdminDashboard() {
     { id: 'billing', label: 'Billing', icon: 'fas fa-file-invoice-dollar' },
     { id: 'funds', label: 'Funds', icon: 'fas fa-wallet' },
     { id: 'integrations', label: 'Integrations', icon: 'fas fa-plug' },
+    { id: 'email-settings', label: 'Email Settings', icon: 'fas fa-envelope' },
     { id: 'settings', label: 'Settings', icon: 'fas fa-cog' }
   ];
 
@@ -43,6 +45,8 @@ export default function AdminDashboard() {
         return <Funds />;
       case "integrations":
         return <Integrations />;
+      case "email-settings":
+        return <EmailProviderSettings />;
       case "settings":
         return <Settings />;
       case "payouts":

@@ -84,13 +84,13 @@ export default function PayoutManagement() {
                     backgroundColor: {
                       bank_transfer: 'rgba(59, 130, 246, 0.1)',
                       paypal: 'rgba(99, 102, 241, 0.1)',
-                      intasend: 'rgba(16, 185, 129, 0.1)',
+                      polar: 'rgba(6, 182, 212, 0.1)', // Replaced IntaSend with Polar
                       crypto: 'rgba(245, 158, 11, 0.1)'
                     }[payout.payout_method],
                     color: {
                       bank_transfer: 'rgb(59, 130, 246)',
                       paypal: 'rgb(99, 102, 241)',
-                      intasend: 'rgb(16, 185, 129)',
+                      polar: 'rgb(6, 182, 212)', // Replaced IntaSend with Polar
                       crypto: 'rgb(245, 158, 11)'
                     }[payout.payout_method]
                   }}>

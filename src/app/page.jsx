@@ -1,11 +1,6 @@
 "use client";
 import React from "react";
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+import { useSession } from '@/lib/auth-client';
 
 function MainComponent() {
   const [currentView, setCurrentView] = React.useState("landing");
@@ -179,84 +174,23 @@ function MainComponent() {
   const handleGetStarted = () => {
     scrollToSection("pricing");
   };
+  // "Account First" flow - Always create account first, then payment (no trials)
   const checkAuthAndProceed = async (planData) => {
     try {
-      // Check if user is authenticated
-      const { data: { session } } = await supabase.auth.getSession();
+      // Always redirect to signup first with plan information
+      const planParams = new URLSearchParams({
+        plan: planData.type,
+        tier: planData.subscribers.toString()
+      });
       
-      if (planData.type === 'Free') {
-        // Handle free plan - either signup or direct activation
-        if (!session) {
-          const planParams = new URLSearchParams({
-            plan: planData.type,
-            tier: planData.subscribers.toString(),
-            price: planData.price.toString()
-          });
-          localStorage.setItem('selectedPlan', JSON.stringify(planData));
-          window.location.href = `/auth/signup?${planParams.toString()}`;
-        } else {
-          // User is logged in, activate free plan directly
-          const response = await fetch('/api/payments/polar-checkout', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              plan_type: 'Free',
-              customer_email: session.user.email,
-              customer_name: session.user.user_metadata?.full_name || session.user.email,
-              success_url: `${window.location.origin}/user-dashboard?welcome=true`
-            })
-          });
-          
-          const data = await response.json();
-          if (data.success) {
-            window.location.href = data.redirect_url;
-          } else {
-            throw new Error(data.error || 'Failed to activate free plan');
-          }
-        }
-      } else {
-        // Handle paid plans
-        if (!session) {
-          // User not logged in - redirect to signup
-          const planParams = new URLSearchParams({
-            plan: planData.type,
-            tier: planData.subscribers.toString(),
-            price: planData.price.toString()
-          });
-          localStorage.setItem('selectedPlan', JSON.stringify(planData));
-          window.location.href = `/auth/signup?${planParams.toString()}`;
-        } else {
-          // User logged in - create Polar checkout
-          const response = await fetch('/api/payments/polar-checkout', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              plan_type: planData.type,
-              subscriber_tier: planData.subscribers,
-              customer_email: session.user.email,
-              customer_name: session.user.user_metadata?.full_name || session.user.email,
-              success_url: `${window.location.origin}/subscription/success`,
-              cancel_url: `${window.location.origin}/`,
-              metadata: {
-                source: 'landing_page'
-              }
-            })
-          });
-          
-          const data = await response.json();
-          if (data.success && data.checkout_url) {
-            window.location.href = data.checkout_url;
-          } else {
-            throw new Error(data.error || 'Failed to create checkout session');
-          }
-        }
+      // Add price for paid plans (not needed for Free)
+      if (planData.type !== 'Free') {
+        planParams.set('price', planData.price.toString());
       }
+      
+      window.location.href = `/auth/signup?${planParams.toString()}`;
     } catch (error) {
-      console.error('Payment processing error:', error);
+      console.error('Plan selection error:', error);
       alert('There was an error processing your request. Please try again.');
     }
   };
@@ -1371,7 +1305,7 @@ function MainComponent() {
                     How do I get paid?
                   </h3>
                   <p className="text-gray-600">
-                    Payments are processed automatically every month via IntaSend
+                    Payments are processed automatically every month via Polar.sh
                     supporting M-Pesa, cards, and bank transfers. We support multiple currencies and provide
                     detailed earnings reports for easy accounting.
                   </p>
@@ -1402,7 +1336,7 @@ function MainComponent() {
                   </h3>
                   <p className="text-gray-600">
                     We accept all major credit cards, M-Pesa mobile money, and bank
-                    transfers via IntaSend. For premium plans, we also support custom payment
+                    transfers via Polar.sh. For premium plans, we also support custom payment
                     gateways.
                   </p>
                 </div>

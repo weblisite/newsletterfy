@@ -2,7 +2,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
-import { UserProvider } from '../contexts/UserContext'
+import { AuthProvider } from '@/components/auth/AuthProvider'
 config.autoAddCss = false
 
 const inter = Inter({ subsets: ['latin'] })
@@ -25,9 +25,9 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className={inter.className}>
-        <UserProvider>
+        <AuthProvider>
           {children}
-        </UserProvider>
+        </AuthProvider>
       </body>
     </html>
   )

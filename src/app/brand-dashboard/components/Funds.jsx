@@ -3,88 +3,37 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 
 export default function Funds() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [showAddFundsModal, setShowAddFundsModal] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('credit_card');
-  const [amount, setAmount] = useState('');
-  const [savedCards, setSavedCards] = useState([]);
-  const [selectedCard, setSelectedCard] = useState(null);
-  const [newCard, setNewCard] = useState({
-    cardNumber: '',
-    cardholderName: '',
-    expiryDate: '',
-    cvv: '',
-    saveCard: true
-  });
-
   const [balanceStats, setBalanceStats] = useState({
-    availableBalance: 5280,
+    availableBalance: 0,
     pendingBalance: 0,
-    totalSpent: 12450,
-    totalBudget: 17730,
+    totalSpent: 0,
+    totalDeposited: 0,
   });
+  const [transactions, setTransactions] = useState([]);
+  const [showAddFundsModal, setShowAddFundsModal] = useState(false);
+  const [amount, setAmount] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [transactions, setTransactions] = useState([
-    {
-      id: 1,
-      type: 'deposit',
-      amount: 5000,
-      status: 'completed',
-      date: '2024-01-15',
-      method: 'Credit Card (**** 4242)',
-      description: 'Funds added'
-    },
-    {
-      id: 2,
-      type: 'ad_spend',
-      amount: -320,
-      status: 'completed',
-      date: '2024-01-20',
-      method: 'Automatic',
-      description: 'Summer Sale Promotion'
-    },
-    {
-      id: 3,
-      type: 'deposit',
-      amount: 1000,
-      status: 'completed',
-      date: '2024-02-05',
-      method: 'Credit Card (**** 4242)',
-      description: 'Funds added'
-    },
-    {
-      id: 4,
-      type: 'ad_spend',
-      amount: -400,
-      status: 'completed',
-      date: '2024-02-10',
-      method: 'Automatic',
-      description: 'Summer Sale Promotion'
-    },
-  ]);
-
-  // Fetch initial data
   useEffect(() => {
     fetchFundsData();
   }, []);
 
   const fetchFundsData = async () => {
     try {
-      setIsLoading(true);
       const response = await fetch('/api/brand/funds');
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to fetch funds data');
-      }
+      if (!response.ok) throw new Error('Failed to fetch funds data');
+      
       const data = await response.json();
-      setBalanceStats(data.balanceStats);
-      setTransactions(data.transactions);
-      setSavedCards(data.savedCards);
-      setIsLoading(false);
+      setBalanceStats(data.balanceStats || {
+        availableBalance: 0,
+        pendingBalance: 0,
+        totalSpent: 0,
+        totalDeposited: 0,
+      });
+      setTransactions(data.transactions || []);
     } catch (error) {
-      toast.error(error.message);
+      toast.error('Failed to load funds data');
       console.error(error);
-      setIsLoading(false);
     }
   };
 
@@ -95,48 +44,40 @@ export default function Funds() {
       toast.error('Please enter a valid amount');
       return;
     }
-    
-    if (paymentMethod === 'credit_card' && !selectedCard && (
-      !newCard.cardNumber || !newCard.cardholderName || !newCard.expiryDate || !newCard.cvv
-    )) {
-      toast.error('Please fill in all card details');
+
+    if (parseFloat(amount) < 1) {
+      toast.error('Minimum deposit amount is $1.00');
       return;
     }
     
     try {
       setIsLoading(true);
-      const response = await fetch('/api/brand/funds', {
+      
+      // Use new Polar-based deposit system
+      const response = await fetch('/api/user/funds/polar-deposit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: parseFloat(amount),
-          paymentMethod,
-          cardId: selectedCard,
-          newCard: paymentMethod === 'credit_card' && !selectedCard ? newCard : undefined
+          customer_email: 'brand@example.com', // TODO: Get from user session
+          customer_name: 'Brand Account', // TODO: Get from user session  
+          user_id: 'brand_user_id', // TODO: Get from user session
+          description: 'Brand account funding'
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to add funds');
+        throw new Error(data.error || 'Failed to create deposit checkout');
       }
 
-      // Reset form
-      setAmount('');
-      setSelectedCard(null);
-      setNewCard({
-        cardNumber: '',
-        cardholderName: '',
-        expiryDate: '',
-        cvv: '',
-        saveCard: true
-      });
-      
-      setShowAddFundsModal(false);
-      toast.success(`$${parseFloat(amount).toFixed(2)} added to your account`);
-      
-      // Refresh funds data
-      fetchFundsData();
+      if (data.success && data.checkout_url) {
+        // Redirect to Polar checkout
+        window.location.href = data.checkout_url;
+      } else {
+        throw new Error('Invalid deposit response');
+      }
     } catch (error) {
       toast.error(error.message);
       console.error(error);
@@ -145,58 +86,10 @@ export default function Funds() {
     }
   };
 
-  const handleCardNumberChange = (e) => {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length > 16) value = value.slice(0, 16);
-    
-    // Add spaces for readability
-    let formattedValue = '';
-    for (let i = 0; i < value.length; i++) {
-      if (i > 0 && i % 4 === 0) {
-        formattedValue += ' ';
-      }
-      formattedValue += value[i];
-    }
-    
-    setNewCard({...newCard, cardNumber: formattedValue});
-  };
-
-  const handleExpiryDateChange = (e) => {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length > 4) value = value.slice(0, 4);
-    
-    // Format as MM/YY
-    if (value.length > 2) {
-      value = value.slice(0, 2) + '/' + value.slice(2);
-    }
-    
-    setNewCard({...newCard, expiryDate: value});
-  };
-
-  const getTransactionStatusClass = (status) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'failed':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getTransactionTypeClass = (type, amount) => {
-    if (amount > 0) {
-      return 'text-green-600';
-    } else {
-      return 'text-red-600';
-    }
-  };
-
   return (
-    <div className="animate-fadeIn">
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Funds Management</h2>
           <p className="text-gray-600">Manage your ad campaign budget</p>
@@ -247,66 +140,77 @@ export default function Funds() {
         </div>
         <div className="glass-panel p-6">
           <div className="flex flex-col">
-            <p className="text-sm text-gray-600">Total Budget</p>
-            <h3 className="text-2xl font-bold text-gray-900">${balanceStats.totalBudget.toLocaleString()}</h3>
+            <p className="text-sm text-gray-600">Total Deposited</p>
+            <h3 className="text-2xl font-bold text-gray-900">${balanceStats.totalDeposited.toLocaleString()}</h3>
             <p className="text-sm text-gray-600">Lifetime deposits</p>
           </div>
         </div>
       </div>
 
-      {/* Transaction History */}
-      <div className="glass-panel overflow-hidden mb-8">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800">Transaction History</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Description
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Method
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Amount
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {transactions.map((transaction) => (
-                <tr key={transaction.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {transaction.date}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {transaction.description}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {transaction.method}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getTransactionStatusClass(transaction.status)}`}>
-                      {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                    </span>
-                  </td>
-                  <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-right ${getTransactionTypeClass(transaction.type, transaction.amount)}`}>
-                    {transaction.amount > 0 ? '+' : ''}{transaction.amount.toLocaleString('en-US', {
-                      style: 'currency',
-                      currency: 'USD'
-                    })}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Transactions */}
+      <div className="glass-panel">
+        <div className="p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Transactions</h3>
+          {transactions.length === 0 ? (
+            <div className="text-center py-8">
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No transactions</h3>
+              <p className="mt-1 text-sm text-gray-500">Add funds to start advertising campaigns.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {transactions.map((transaction) => (
+                    <tr key={transaction.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {new Date(transaction.created_at || transaction.date).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          transaction.type === 'deposit' 
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {transaction.type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <span className={transaction.type === 'deposit' ? 'text-green-600' : 'text-red-600'}>
+                          {transaction.type === 'deposit' ? '+' : '-'}${Math.abs(transaction.amount).toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          transaction.status === 'completed'
+                            ? 'bg-green-100 text-green-800'
+                            : transaction.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {transaction.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {transaction.campaign_name || '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
 
@@ -342,226 +246,56 @@ export default function Funds() {
                       onChange={(e) => setAmount(e.target.value)}
                       className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-cyan-500 focus:border-cyan-500"
                       placeholder="0.00"
-                      min="10"
+                      min="1"
                       step="0.01"
                       required
                     />
                   </div>
                 </div>
 
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Payment Method
-                  </label>
-                  <div className="grid grid-cols-3 gap-4">
-                    <button
-                      type="button"
-                      className={`flex items-center justify-center p-4 border rounded-lg ${
-                        paymentMethod === 'card'
-                          ? 'border-cyan-500 bg-cyan-50 text-cyan-700'
-                          : 'border-gray-300 hover:bg-gray-50'
-                      }`}
-                      onClick={() => setPaymentMethod('card')}
-                    >
-                      💳 Card
-                    </button>
-                    <button
-                      type="button"
-                      className={`flex items-center justify-center p-4 border rounded-lg ${
-                        paymentMethod === 'mpesa'
-                          ? 'border-cyan-500 bg-cyan-50 text-cyan-700'
-                          : 'border-gray-300 hover:bg-gray-50'
-                      }`}
-                      onClick={() => setPaymentMethod('mpesa')}
-                    >
-                      📱 M-Pesa
-                    </button>
-                    <button
-                      type="button"
-                      className={`flex items-center justify-center p-4 border rounded-lg ${
-                        paymentMethod === 'bank'
-                          ? 'border-cyan-500 bg-cyan-50 text-cyan-700'
-                          : 'border-gray-300 hover:bg-gray-50'
-                      }`}
-                      onClick={() => setPaymentMethod('bank')}
-                    >
-                      🏦 Bank
-                    </button>
+                <div className="mb-6">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-blue-800">
+                          Secure Payment with Polar
+                        </h3>
+                        <div className="mt-2 text-sm text-blue-700">
+                          <p>• Payments processed securely by Polar.sh</p>
+                          <p>• Supports all major credit/debit cards</p>
+                          <p>• Funds added instantly to your account</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {paymentMethod === 'credit_card' && (
-                  <>
-                    {savedCards.length > 0 && (
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Saved Cards
-                        </label>
-                        <div className="space-y-2">
-                          {savedCards.map((card) => (
-                            <div
-                              key={card.id}
-                              className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer ${
-                                selectedCard === card.id
-                                  ? 'border-cyan-500 bg-cyan-50'
-                                  : 'border-gray-300 hover:bg-gray-50'
-                              }`}
-                              onClick={() => setSelectedCard(card.id)}
-                            >
-                              <div className="flex items-center">
-                                <div className="mr-3">
-                                  {card.brand === 'visa' && <i className="fab fa-cc-visa text-blue-700 text-xl"></i>}
-                                  {card.brand === 'mastercard' && <i className="fab fa-cc-mastercard text-red-600 text-xl"></i>}
-                                  {card.brand === 'amex' && <i className="fab fa-cc-amex text-blue-500 text-xl"></i>}
-                                </div>
-                                <div>
-                                  <div className="text-sm font-medium text-gray-900">{card.cardNumber}</div>
-                                  <div className="text-xs text-gray-500">Expires {card.expiryDate}</div>
-                                </div>
-                              </div>
-                              <div className="flex items-center">
-                                {card.isDefault && (
-                                  <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded mr-2">
-                                    Default
-                                  </span>
-                                )}
-                                <input
-                                  type="radio"
-                                  checked={selectedCard === card.id}
-                                  onChange={() => setSelectedCard(card.id)}
-                                  className="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-gray-300"
-                                />
-                              </div>
-                            </div>
-                          ))}
-                          <div
-                            className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer ${
-                              selectedCard === null
-                                ? 'border-cyan-500 bg-cyan-50'
-                                : 'border-gray-300 hover:bg-gray-50'
-                            }`}
-                            onClick={() => setSelectedCard(null)}
-                          >
-                            <div className="flex items-center">
-                              <div className="mr-3">
-                                <i className="fas fa-plus-circle text-gray-400 text-xl"></i>
-                              </div>
-                              <div className="text-sm font-medium text-gray-900">Use a new card</div>
-                            </div>
-                            <input
-                              type="radio"
-                              checked={selectedCard === null}
-                              onChange={() => setSelectedCard(null)}
-                              className="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-gray-300"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {selectedCard === null && (
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Card Number
-                          </label>
-                          <input
-                            type="text"
-                            value={newCard.cardNumber}
-                            onChange={handleCardNumberChange}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-cyan-500 focus:border-cyan-500"
-                            placeholder="1234 5678 9012 3456"
-                            required={paymentMethod === 'credit_card' && selectedCard === null}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Cardholder Name
-                          </label>
-                          <input
-                            type="text"
-                            value={newCard.cardholderName}
-                            onChange={(e) => setNewCard({...newCard, cardholderName: e.target.value})}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-cyan-500 focus:border-cyan-500"
-                            placeholder="John Smith"
-                            required={paymentMethod === 'credit_card' && selectedCard === null}
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Expiry Date
-                            </label>
-                            <input
-                              type="text"
-                              value={newCard.expiryDate}
-                              onChange={handleExpiryDateChange}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-cyan-500 focus:border-cyan-500"
-                              placeholder="MM/YY"
-                              required={paymentMethod === 'credit_card' && selectedCard === null}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              CVV
-                            </label>
-                            <input
-                              type="text"
-                              value={newCard.cvv}
-                              onChange={(e) => {
-                                const value = e.target.value.replace(/\D/g, '');
-                                if (value.length <= 4) {
-                                  setNewCard({...newCard, cvv: value});
-                                }
-                              }}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-cyan-500 focus:border-cyan-500"
-                              placeholder="123"
-                              required={paymentMethod === 'credit_card' && selectedCard === null}
-                            />
-                          </div>
-                        </div>
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            id="save-card"
-                            checked={newCard.saveCard}
-                            onChange={(e) => setNewCard({...newCard, saveCard: e.target.checked})}
-                            className="h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-gray-300 rounded"
-                          />
-                          <label htmlFor="save-card" className="ml-2 text-sm text-gray-700">
-                            Save this card for future payments
-                          </label>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {paymentMethod === 'paypal' && (
-                  <div className="p-4 bg-gray-50 rounded-lg text-center">
-                    <p className="text-sm text-gray-700 mb-2">
-                      You will be redirected to PayPal to complete your payment.
-                    </p>
-                    <i className="fab fa-paypal text-blue-600 text-4xl"></i>
-                  </div>
-                )}
-
-                <div className="mt-6">
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddFundsModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                    disabled={isLoading}
+                  >
+                    Cancel
+                  </button>
                   <button
                     type="submit"
-                    className="w-full bg-cyan-600 text-white px-4 py-2 rounded-lg hover:bg-cyan-700 transition-colors"
+                    className="flex-1 bg-cyan-500 text-white px-4 py-2 rounded-lg hover:bg-cyan-600 disabled:opacity-50"
                     disabled={isLoading}
                   >
                     {isLoading ? (
-                      <span className="flex items-center justify-center">
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                         Processing...
-                      </span>
+                      </div>
                     ) : (
-                      `Add ${amount ? `$${parseFloat(amount).toFixed(2)}` : 'Funds'}`
+                      `Add $${amount || '0.00'} to Account`
                     )}
                   </button>
                 </div>
@@ -572,4 +306,4 @@ export default function Funds() {
       )}
     </div>
   );
-} 
+}

@@ -1,14 +1,33 @@
 import { NextResponse } from 'next/server';
-import IntaSend from 'intasend-node';
 
-const intasend = new IntaSend(
-  process.env.INTASEND_PUBLISHABLE_KEY,
-  process.env.INTASEND_SECRET_KEY,
-  process.env.NODE_ENV === 'production' // Use production environment in production
-);
+// LEGACY ROUTE - DISABLED
+// This route has been replaced by Polar.sh checkout
+// All subscription creation now goes through: /api/payments/polar-checkout
 
 export async function POST(request) {
+  // This endpoint is deprecated - Use /api/payments/polar-checkout instead
+  console.log('Legacy subscription creation accessed - redirecting to Polar');
+  
+  return NextResponse.json({
+    success: false,
+    error: 'IntaSend subscriptions are no longer supported.',
+    message: 'Please use Polar checkout for all subscriptions.',
+    redirect_endpoint: '/api/payments/polar-checkout'
+  }, { status: 410 });
+}
+
+/* LEGACY CODE DISABLED - Use /api/payments/polar-checkout instead
+export async function POST_DISABLED(request) {
   try {
+    // Redirect to new Polar checkout endpoint
+    return NextResponse.json({
+      success: false,
+      error: 'This payment method is no longer supported. Please use the updated checkout process.',
+      redirect: '/api/payments/polar-checkout',
+      message: 'IntaSend integration has been replaced with Polar.sh for better payment processing.'
+    }, { status: 410 }); // 410 Gone - resource no longer available
+    
+    /* ORIGINAL INTASEND CODE DISABLED
     const body = await request.json();
     const { 
       amount, 
@@ -130,6 +149,17 @@ export async function POST(request) {
       { success: false, error: 'Internal server error' },
       { status: 500 }
     );
+  }
+} 
+END OF DISABLED INTASEND CODE */
+    
+  } catch (error) {
+    console.error('Legacy subscription route accessed:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'This payment method is no longer supported. Please use Polar.sh checkout.',
+      redirect: '/api/payments/polar-checkout'
+    }, { status: 410 });
   }
 }
 

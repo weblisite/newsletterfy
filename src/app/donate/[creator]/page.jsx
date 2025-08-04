@@ -88,7 +88,7 @@ export default function DonatePage() {
         toast.success(data.message);
         setShowSuccess(true);
       } else if (data.checkout_url) {
-        // Redirect to IntaSend checkout
+        // Redirect to Polar.sh checkout
         window.location.href = data.checkout_url;
       } else {
         setShowSuccess(true);
@@ -357,7 +357,7 @@ export default function DonatePage() {
               </button>
 
               <p className="text-sm text-gray-500 text-center">
-                Payment processing powered by IntaSend - Supporting Card, M-Pesa & Bank payments
+                Payment processing powered by Polar.sh - Supporting all major payment methods
               </p>
             </form>
           </div>

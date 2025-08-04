@@ -48,23 +48,39 @@ services:
       - key: NEXT_PUBLIC_TINYMCE_API_KEY
         sync: false  # Set manually in dashboard
       
-      # Email Configuration (Optional - Set in Render Dashboard)
+      # Email Configuration (Set in Render Dashboard)
+      # SendGrid (Primary Email Provider)
       - key: SENDGRID_API_KEY
         sync: false  # Set manually in dashboard
-      - key: FROM_EMAIL
+      - key: EMAIL_FROM
         value: noreply@newsletterfy.com
+      - key: EMAIL_FROM_NAME
+        value: Newsletterfy
       
-      # Legacy Payment Providers (Optional - Set in Render Dashboard if needed)
-      - key: STRIPE_SECRET_KEY
+      # Elastic Email (Alternative Email Provider)
+      - key: ELASTIC_EMAIL_API_KEY
         sync: false  # Set manually in dashboard
-      - key: STRIPE_PUBLISHABLE_KEY
+      - key: ELASTIC_EMAIL_POOL_NAME
+        value: My Pool
+      
+      # Email Provider Settings
+      - key: EMAIL_PROVIDER
+        value: sendgrid  # Default to SendGrid
+      - key: TEST_EMAIL
         sync: false  # Set manually in dashboard
-      - key: PAYSTACK_SECRET_KEY
-        sync: false  # Set manually in dashboard
-      - key: INTASEND_PUBLISHABLE_KEY
-        sync: false  # Set manually in dashboard
-      - key: INTASEND_SECRET_KEY
-        sync: false  # Set manually in dashboard
+      
+      # Legacy Payment Providers (DISABLED - Using Polar.sh)
+      # These are commented out as Polar.sh is now the primary payment processor
+      # - key: STRIPE_SECRET_KEY
+      #   sync: false
+      # - key: STRIPE_PUBLISHABLE_KEY
+      #   sync: false
+      # - key: PAYSTACK_SECRET_KEY
+      #   sync: false
+      # - key: INTASEND_PUBLISHABLE_KEY
+      #   sync: false
+      # - key: INTASEND_SECRET_KEY
+      #   sync: false
 
   # Backend API (if you want to deploy backend separately)
   - type: web

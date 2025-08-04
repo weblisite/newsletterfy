@@ -280,45 +280,35 @@ export default function UserProfile() {
         }
       }
 
-      const response = await fetch('/api/payments/intasend-checkout', {
+      const response = await fetch('/api/payments/polar-checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          payment_type: 'subscription',
-          amount: tier.price,
-          currency: paymentMethod === 'mpesa' ? 'KES' : 'USD',
-          payment_method: paymentMethod,
-          customer_name: formData.full_name || user.user_metadata?.full_name || 'User',
+          plan_type: plan,
+          subscriber_tier: tier.subscriber_limit,
           customer_email: formData.email || user.email,
-          phone_number: phoneNumber,
-          description: `${plan} Plan Subscription - ${tier?.subscriber_limit?.toLocaleString() || 'unlimited'} subscribers`,
-          tier_id: tier.id,
+          customer_name: formData.full_name || user.user_metadata?.full_name || 'User',
+          success_url: `${window.location.origin}/user-dashboard?upgrade=success&plan=${plan}`,
+          cancel_url: `${window.location.origin}/user-dashboard`,
           metadata: {
-            plan_name: plan,
-            subscriber_limit: tier.subscriber_limit,
-            user_id: user.id
-          },
-          redirect_url: `${window.location.origin}/user-dashboard?upgrade=success&plan=${plan}`
+            source: 'user_profile',
+            user_id: user.id,
+            payment_method: paymentMethod,
+            phone_number: phoneNumber
+          }
         }),
       });
 
       const data = await response.json();
 
-      if (data.success) {
-        if (paymentMethod === 'mpesa') {
-          showMessage('M-Pesa payment initiated. Check your phone for the STK push prompt.', 'success');
-          // Poll for payment status or redirect after a delay
-          setTimeout(() => {
-            window.location.href = `/user-dashboard?upgrade=pending&ref=${data.payment_reference}`;
-          }, 3000);
-        } else {
-          // Redirect to IntaSend checkout for card/bank payments
-          window.location.href = data.checkout_url;
-        }
+      if (data.success && data.checkout_url) {
+        // Redirect to Polar.sh checkout (handles all payment methods)
+        showMessage('Redirecting to secure checkout...', 'success');
+        window.location.href = data.checkout_url;
       } else {
-        showMessage(data.error || 'Failed to create payment checkout', 'error');
+        showMessage(data.error || 'Failed to create checkout session', 'error');
       }
     } catch (error) {
       console.error('Error processing upgrade:', error);

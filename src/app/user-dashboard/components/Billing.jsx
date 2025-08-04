@@ -160,28 +160,32 @@ export default function Billing({ user }) {
 
   const handleUpgrade = async (plan, tier) => {
     try {
-      const response = await fetch('/api/subscriptions/create', {
+      const response = await fetch('/api/payments/polar-checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           plan_type: plan,
-          subscriber_limit: tier.subscribers,
-          amount: tier.price,
-          payment_method: paymentMethod,
-          currency: paymentMethod === 'mpesa' ? 'KES' : 'USD',
-          user_id: user.id
+          subscriber_tier: tier.subscribers,
+          customer_email: user.email,
+          customer_name: user.user_metadata?.full_name || user.email,
+          success_url: `${window.location.origin}/user-dashboard?upgrade=success`,
+          cancel_url: `${window.location.origin}/user-dashboard`,
+          metadata: {
+            source: 'dashboard_billing',
+            user_id: user.id
+          }
         }),
       });
 
       const data = await response.json();
 
-      if (data.success) {
-        // Redirect to IntaSend checkout
+      if (data.success && data.checkout_url) {
+        // Redirect to Polar.sh checkout
         window.location.href = data.checkout_url;
       } else {
-        toast.error(data.error || 'Failed to create subscription');
+        toast.error(data.error || 'Failed to create checkout session');
       }
     } catch (error) {
       console.error('Error creating subscription:', error);
