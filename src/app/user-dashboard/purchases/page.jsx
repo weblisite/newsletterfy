@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import PurchasedProducts from '@/components/monetization/PurchasedProducts';
+import PurchasedProducts from '@/app/user-dashboard/components/monetization/PurchasedProducts';
 
 export default function PurchasesPage() {
   const searchParams = useSearchParams();

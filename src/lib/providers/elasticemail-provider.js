@@ -1,4 +1,4 @@
-import ElasticEmail from '@elasticemail/elasticemail-client';
+// import ElasticEmail from '@elasticemail/elasticemail-client'; // TODO: Fix ElasticEmail import
 import { BaseEmailProvider } from './base-provider.js';
 import { generateNewsletterSender, getNewsletterSenderByType } from '../email-sender.js';
 

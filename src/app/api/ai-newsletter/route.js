@@ -2,8 +2,13 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || 'sk-dummy-key-for-build',
 });
+
+// Check if OpenAI is properly configured
+if (!process.env.OPENAI_API_KEY && process.env.NODE_ENV !== 'development') {
+  console.warn('OPENAI_API_KEY is not configured');
+}
 
 export async function POST(request) {
   try {

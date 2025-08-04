@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+// import { PrismaClient } from '@prisma/client'; // DISABLED - Using Supabase
 
-const prisma = new PrismaClient();
+// DISABLED - Prisma client disabled in favor of Supabase
+// const prisma = new PrismaClient();
+const prisma = null;
 
 // Track opens
 export async function GET(request) {

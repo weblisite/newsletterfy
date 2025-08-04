@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { Polar, Configuration } from '@polar-sh/sdk';
+import { Polar } from '@polar-sh/sdk';
 import { createClient } from '@supabase/supabase-js';
 
-const polar = new Polar(new Configuration({
+const polar = new Polar({
   accessToken: process.env.POLAR_ACCESS_TOKEN,
   server: 'production', // Use 'production' for live Polar API
-}));
+});
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,

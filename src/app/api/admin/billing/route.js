@@ -1,14 +1,10 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import IntaSend from 'intasend-node';
+// import IntaSend from 'intasend-node'; // DISABLED - Using Polar.sh for payments
 
-// Initialize IntaSend with environment variables
-const intasend = new IntaSend(
-  process.env.INTASEND_PUBLISHABLE_KEY || 'ISPubKey_live_8e8857a5-54ad-4d06-8537-4557857db13b',
-  process.env.INTASEND_SECRET_KEY || 'ISSecretKey_live_ce648358-1847-471d-bf9f-24cf3f887c59',
-  process.env.NODE_ENV === 'production' ? false : true // true for test environment
-);
+// DISABLED - IntaSend integration disabled in favor of Polar.sh
+// const intasend = new IntaSend(...);
 
 // GET billing information
 export async function GET(request) {

@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import DigitalProductsGrid from '@/components/monetization/DigitalProductsGrid';
+import DigitalProductsGrid from '@/app/user-dashboard/components/monetization/DigitalProductsGrid';
 
 export default function MarketplacePage() {
   const [filters, setFilters] = useState({
