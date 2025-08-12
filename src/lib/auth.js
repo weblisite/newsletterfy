@@ -1,21 +1,13 @@
 import { betterAuth } from "better-auth";
 import { polar } from "@polar-sh/better-auth";
-import { SupabaseAdapter } from "@auth/supabase-adapter";
-import { createClient } from "@supabase/supabase-js";
-
-// Initialize Supabase client for Better-Auth
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   secret: process.env.BETTER_AUTH_SECRET || "fallback-secret-for-build",
-  adapter: SupabaseAdapter({
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    secret: process.env.SUPABASE_SERVICE_ROLE_KEY,
-  }),
+  database: process.env.DATABASE_URL ? {
+    provider: "postgres",
+    url: process.env.DATABASE_URL,
+  } : undefined,
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
