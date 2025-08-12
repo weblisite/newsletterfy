@@ -1,5 +1,8 @@
 'use client';
 
+// Prevent static generation for this page since it requires authentication
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 

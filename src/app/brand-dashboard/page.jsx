@@ -1,4 +1,8 @@
 "use client";
+
+// Prevent static generation for this page since it requires authentication
+export const dynamic = 'force-dynamic';
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { 

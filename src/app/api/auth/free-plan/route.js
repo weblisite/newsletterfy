@@ -1,5 +1,5 @@
-// TEMPORARILY DISABLED - Better-Auth configuration needs fixing
-// This route activates the free plan for users
+// Free Plan Activation Route - TEMPORARILY DISABLED
+// Better-Auth configuration needs fixing
 
 import { NextResponse } from 'next/server';
 
@@ -7,6 +7,6 @@ export async function POST(request) {
   return NextResponse.json({
     success: false,
     error: 'Free plan activation is temporarily disabled',
-    message: 'Authentication system is being fixed'
+    message: 'Better-Auth system is being fixed'
   }, { status: 503 });
 }

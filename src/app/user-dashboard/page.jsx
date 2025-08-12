@@ -2,6 +2,9 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
 import { useUser } from '../../contexts/UserContext';
+
+// Prevent static generation for this page since it requires authentication
+export const dynamic = 'force-dynamic';
 import Newsletter from "./components/Newsletter";
 import Subscribers from "./components/Subscribers";
 import Monetization from "./components/Monetization";

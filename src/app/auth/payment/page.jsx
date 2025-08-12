@@ -1,5 +1,8 @@
 'use client';
 
+// Prevent static generation for this page since it requires authentication
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';

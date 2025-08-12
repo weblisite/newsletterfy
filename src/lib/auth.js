@@ -1,7 +1,6 @@
 import { betterAuth } from "better-auth";
 import { polar } from "@polar-sh/better-auth";
-// Using default database adapter for now - check Better-Auth docs for Supabase adapter
-// import { Database } from "better-auth/adapters/supabase";
+import { SupabaseAdapter } from "@auth/supabase-adapter";
 import { createClient } from "@supabase/supabase-js";
 
 // Initialize Supabase client for Better-Auth
@@ -11,11 +10,13 @@ const supabase = createClient(
 );
 
 export const auth = betterAuth({
-  // Temporarily disable database for build - TODO: Fix Better-Auth Supabase adapter
-  // database: new Database(supabase),
+  adapter: SupabaseAdapter({
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    secret: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  }),
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: false, // Temporarily disable for build
+    requireEmailVerification: true,
   },
   socialProviders: {
     google: {

@@ -1,4 +1,8 @@
 "use client";
+
+// Prevent static generation for this page since it requires authentication
+export const dynamic = 'force-dynamic';
+
 import React, { useState } from "react";
 import Users from "./components/Users";
 import Newsletters from "./components/Newsletters";
