@@ -10,6 +10,8 @@ const supabase = createClient(
 );
 
 export const auth = betterAuth({
+  baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  secret: process.env.BETTER_AUTH_SECRET || "fallback-secret-for-build",
   adapter: SupabaseAdapter({
     url: process.env.NEXT_PUBLIC_SUPABASE_URL,
     secret: process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -18,18 +20,19 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
   },
-  socialProviders: {
+  socialProviders: process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     },
-  },
+  } : {},
   plugins: [
-    polar({
-      // Polar configuration
-      baseURL: process.env.POLAR_API_URL || "https://api.polar.sh",
-      accessToken: process.env.POLAR_ACCESS_TOKEN,
-      organizationId: process.env.POLAR_ORGANIZATION_ID,
+    ...(process.env.POLAR_ACCESS_TOKEN && process.env.POLAR_ORGANIZATION_ID ? [
+      polar({
+        // Polar configuration
+        baseURL: process.env.POLAR_API_URL || "https://api.polar.sh",
+        accessToken: process.env.POLAR_ACCESS_TOKEN,
+        organizationId: process.env.POLAR_ORGANIZATION_ID,
       
       // Product mapping for our pricing tiers
       products: {
@@ -65,7 +68,8 @@ export const auth = betterAuth({
       cancelURL: "/pricing",
       
       // No trial period - paid plans require immediate payment
-    }),
+      })
+    ] : []),
   ],
   
   // Custom session configuration
