@@ -1,4 +1,10 @@
 // Better-Auth API Route Handler
 import { auth } from "@/lib/auth";
 
-export const { GET, POST } = auth.handler;
+export async function GET(request) {
+  return auth.handler(request);
+}
+
+export async function POST(request) {
+  return auth.handler(request);
+}

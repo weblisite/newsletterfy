@@ -125,7 +125,23 @@ const createAuthConfig = () => {
   };
 };
 
-export const auth = betterAuth(createAuthConfig());
+// Lazy initialization to prevent build-time errors
+let _auth = null;
+
+export const auth = new Proxy({}, {
+  get(target, prop) {
+    if (!_auth) {
+      try {
+        _auth = betterAuth(createAuthConfig());
+      } catch (error) {
+        console.warn('Auth initialization failed:', error.message);
+        // Return a mock handler for build time
+        return prop === 'handler' ? () => new Response('Auth not configured', { status: 503 }) : undefined;
+      }
+    }
+    return _auth[prop];
+  }
+});
 
 // Helper function to get product key for Polar plugin
 export function getPolarProductKey(planType, subscriberTier) {
