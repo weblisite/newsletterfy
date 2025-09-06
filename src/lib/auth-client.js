@@ -1,8 +1,23 @@
 import { createAuthClient } from "better-auth/react";
 
-export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-});
+// Create auth client with error handling
+let authClient;
+
+try {
+  authClient = createAuthClient({
+    baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  });
+} catch (error) {
+  console.warn('Auth client initialization failed:', error.message);
+  // Create a minimal client for build time
+  authClient = {
+    useSession: () => ({ data: null, isPending: false }),
+    signIn: () => Promise.reject(new Error('Auth not configured')),
+    signUp: () => Promise.reject(new Error('Auth not configured')),
+    signOut: () => Promise.reject(new Error('Auth not configured')),
+    useUser: () => ({ data: null, isPending: false }),
+  };
+}
 
 // Export commonly used hooks
 export const {
@@ -12,6 +27,8 @@ export const {
   signOut,
   useUser,
 } = authClient;
+
+export { authClient };
 
 // Custom hook for plan management
 export function usePlan() {
