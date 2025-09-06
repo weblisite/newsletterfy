@@ -1,34 +1,24 @@
-import { createAuthClient } from "better-auth/react";
+// Temporary fallback auth client to prevent webpack issues
+// TODO: Implement proper Better-Auth integration once webpack issues are resolved
 
-// Create auth client with error handling
-let authClient;
+// Mock auth client for now
+const mockAuthClient = {
+  useSession: () => ({ data: null, isPending: false }),
+  signIn: () => Promise.reject(new Error('Auth not configured')),
+  signUp: () => Promise.reject(new Error('Auth not configured')),
+  signOut: () => Promise.reject(new Error('Auth not configured')),
+  useUser: () => ({ data: null, isPending: false }),
+};
 
-try {
-  authClient = createAuthClient({
-    baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-  });
-} catch (error) {
-  console.warn('Auth client initialization failed:', error.message);
-  // Create a minimal client for build time
-  authClient = {
-    useSession: () => ({ data: null, isPending: false }),
-    signIn: () => Promise.reject(new Error('Auth not configured')),
-    signUp: () => Promise.reject(new Error('Auth not configured')),
-    signOut: () => Promise.reject(new Error('Auth not configured')),
-    useUser: () => ({ data: null, isPending: false }),
-  };
-}
+// Export hooks
+export const useSession = mockAuthClient.useSession;
+export const signIn = mockAuthClient.signIn;
+export const signUp = mockAuthClient.signUp;
+export const signOut = mockAuthClient.signOut;
+export const useUser = mockAuthClient.useUser;
 
-// Export commonly used hooks
-export const {
-  useSession,
-  signIn,
-  signUp,
-  signOut,
-  useUser,
-} = authClient;
-
-export { authClient };
+// Export the client
+export const authClient = mockAuthClient;
 
 // Custom hook for plan management
 export function usePlan() {
