@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useSession, useUser as useBetterAuthUser } from '@/lib/auth-client';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 const UserContext = createContext({});
@@ -20,6 +21,10 @@ export const UserProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(true);
 
+  // Use Better-Auth hooks
+  const { data: session, isPending: sessionPending } = useSession();
+  const { data: betterAuthUser, isPending: userPending } = useBetterAuthUser();
+  
   const supabase = createClientComponentClient();
 
   // Fetch user profile and subscription data
@@ -72,12 +77,11 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  // Initialize auth state
+  // Initialize auth state with Better-Auth
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
+        // Use Better-Auth session data
         if (session?.user) {
           setUser(session.user);
           await fetchUserData(session.user);
@@ -89,34 +93,13 @@ export const UserProvider = ({ children }) => {
       } catch (error) {
         console.error('Error initializing auth:', error);
       } finally {
-        setAuthLoading(false);
-        setLoading(false);
+        setAuthLoading(sessionPending);
+        setLoading(sessionPending || userPending);
       }
     };
 
     initializeAuth();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-          setUser(session.user);
-          await fetchUserData(session.user);
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setUserProfile(null);
-          setPlatformSubscription(null);
-        }
-        
-        setAuthLoading(false);
-        setLoading(false);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
+  }, [session, sessionPending, userPending]);
 
   // Refresh user data (useful after payments)
   const refreshUserData = async () => {
@@ -184,7 +167,9 @@ export const UserProvider = ({ children }) => {
   // Sign out function
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      // Import signOut from auth-client
+      const { signOut: betterAuthSignOut } = await import('@/lib/auth-client');
+      await betterAuthSignOut();
     } catch (error) {
       console.error('Error signing out:', error);
     }
