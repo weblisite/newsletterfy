@@ -1,7 +1,6 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 const UserContext = createContext({});
 
@@ -20,9 +19,9 @@ export const UserProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(true);
 
-  const supabase = createClientComponentClient();
+  // Removed Supabase client to prevent webpack errors
 
-  // Fetch user profile and subscription data
+  // Fetch user profile and subscription data - temporarily disabled
   const fetchUserData = async (authUser) => {
     try {
       if (!authUser) {
@@ -31,42 +30,16 @@ export const UserProvider = ({ children }) => {
         return;
       }
 
-      // Fetch user profile
-      const { data: profile, error: profileError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', authUser.id)
-        .single();
-
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error('Error fetching user profile:', profileError);
-      } else {
-        setUserProfile(profile);
-      }
-
-      // Fetch platform subscription
-      const { data: subscription, error: subscriptionError } = await supabase
-        .from('platform_subscriptions')
-        .select('*')
-        .eq('user_id', authUser.id)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (subscriptionError && subscriptionError.code !== 'PGRST116') {
-        console.error('Error fetching platform subscription:', subscriptionError);
-        // Set default free plan if no subscription found
-        setPlatformSubscription({
-          plan_type: 'Free',
-          subscriber_limit: 1000,
-          status: 'active',
-          amount: 0,
-          payment_status: 'active'
-        });
-      } else {
-        setPlatformSubscription(subscription);
-      }
+      // TODO: Implement Better-Auth user data fetching
+      // For now, set default values
+      setUserProfile(null);
+      setPlatformSubscription({
+        plan_type: 'Free',
+        subscriber_limit: 1000,
+        status: 'active',
+        amount: 0,
+        payment_status: 'active'
+      });
     } catch (error) {
       console.error('Error fetching user data:', error);
     }
