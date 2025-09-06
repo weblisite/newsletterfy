@@ -1,7 +1,6 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useSession, useUser as useBetterAuthUser } from '@/lib/auth-client';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 const UserContext = createContext({});
@@ -21,10 +20,6 @@ export const UserProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Use Better-Auth hooks
-  const { data: session, isPending: sessionPending } = useSession();
-  const { data: betterAuthUser, isPending: userPending } = useBetterAuthUser();
-  
   const supabase = createClientComponentClient();
 
   // Fetch user profile and subscription data
@@ -77,29 +72,24 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  // Initialize auth state with Better-Auth
+  // Initialize auth state - temporarily disabled for webpack fix
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Use Better-Auth session data
-        if (session?.user) {
-          setUser(session.user);
-          await fetchUserData(session.user);
-        } else {
-          setUser(null);
-          setUserProfile(null);
-          setPlatformSubscription(null);
-        }
+        // For now, set no user to prevent errors
+        setUser(null);
+        setUserProfile(null);
+        setPlatformSubscription(null);
       } catch (error) {
         console.error('Error initializing auth:', error);
       } finally {
-        setAuthLoading(sessionPending);
-        setLoading(sessionPending || userPending);
+        setAuthLoading(false);
+        setLoading(false);
       }
     };
 
     initializeAuth();
-  }, [session, sessionPending, userPending]);
+  }, []);
 
   // Refresh user data (useful after payments)
   const refreshUserData = async () => {
