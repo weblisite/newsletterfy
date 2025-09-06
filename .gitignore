@@ -46,3 +46,6 @@ yarn-error.log*
 next-env.d.tsnode_modules/
 backend/node_modules/
 backend/.env
+
+# clerk configuration (can include secrets)
+/.clerk/

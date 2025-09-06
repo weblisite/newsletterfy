@@ -36,7 +36,7 @@ const createAuthConfig = () => {
           baseURL: process.env.POLAR_API_URL || "https://api.polar.sh",
           accessToken: process.env.POLAR_ACCESS_TOKEN,
           organizationId: process.env.POLAR_ORGANIZATION_ID,
-          
+        
           // Product mapping for our pricing tiers
           products: {
             // Pro Plan Products
@@ -69,6 +69,8 @@ const createAuthConfig = () => {
           // Success and cancel URLs
           successURL: "/user-dashboard?welcome=true",
           cancelURL: "/pricing",
+          
+          // No trial period - paid plans require immediate payment
         })
       ] : []),
     ],

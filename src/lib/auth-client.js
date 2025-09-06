@@ -1,34 +1,46 @@
-import { createAuthClient } from "better-auth/react";
+// Clerk client-side hooks and utilities
+import { 
+  useUser as useClerkUser, 
+  useAuth as useClerkAuth,
+  SignInButton,
+  SignUpButton,
+  UserButton,
+  SignOutButton
+} from '@clerk/nextjs';
 
-// Create auth client with error handling
-let authClient;
+// Re-export Clerk hooks with consistent naming
+export const useUser = useClerkUser;
+export const useAuth = useClerkAuth;
 
-try {
-  authClient = createAuthClient({
-    baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-  });
-} catch (error) {
-  console.warn('Auth client initialization failed:', error.message);
-  // Create a minimal client for build time
-  authClient = {
-    useSession: () => ({ data: null, isPending: false }),
-    signIn: () => Promise.reject(new Error('Auth not configured')),
-    signUp: () => Promise.reject(new Error('Auth not configured')),
-    signOut: () => Promise.reject(new Error('Auth not configured')),
-    useUser: () => ({ data: null, isPending: false }),
+// Create a session hook that matches the previous API
+export function useSession() {
+  const { user, isLoaded } = useClerkUser();
+  const { isSignedIn } = useClerkAuth();
+  
+  return {
+    data: isSignedIn ? { user } : null,
+    isPending: !isLoaded,
   };
 }
 
-// Export commonly used hooks
-export const {
-  useSession,
-  signIn,
-  signUp,
-  signOut,
-  useUser,
-} = authClient;
+// Auth actions
+export function signIn() {
+  // This will be handled by Clerk's SignInButton component
+  console.log('Use SignInButton component for sign in');
+}
 
-export { authClient };
+export function signUp() {
+  // This will be handled by Clerk's SignUpButton component
+  console.log('Use SignUpButton component for sign up');
+}
+
+export function signOut() {
+  // This will be handled by Clerk's SignOutButton component
+  console.log('Use SignOutButton component for sign out');
+}
+
+// Export Clerk components
+export { SignInButton, SignUpButton, UserButton, SignOutButton };
 
 // Custom hook for plan management
 export function usePlan() {
